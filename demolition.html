@@ -6,6 +6,8 @@
     <title>MultiSynq Demolition Derby</title>
     <script src="https://cdn.jsdelivr.net/npm/@multisynq/client@latest/bundled/multisynq-client.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="config.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         body { margin: 0; overflow: hidden; background-color: #6B4226; font-family: 'Press Start 2P', cursive; color: white; touch-action: none; }
@@ -50,13 +52,14 @@
         #croquet_dock_button_envelope { background-color: rgba(50, 50, 50, 0.8) !important; border-radius: 8px !important; }
         #croquet_dock_button_label { color: white !important; font-family: 'Press Start 2P', cursive !important; }
     </style>
+
 </head>
 <body>
     <div id="game-container"><canvas id="game-canvas"></canvas><div id="player-damage-hud" class="hud">Damage: 0</div><div id="center-message-display" class="center-message"><span id="game-over-text" class="message-text">Game Over!</span><span id="countdown-timer-text" class="countdown-text">10</span></div></div>
     <div class="mobile-controls"><div class="left-controls"><button id="btn-left" aria-label="Turn Left"></button><button id="btn-right" aria-label="Turn Right"></button></div><div class="right-controls"><button id="btn-fwd" aria-label="Accelerate"></button><button id="btn-brake" aria-label="Brake"></button></div></div>
     <script>
-        const API_KEY = "2atXt6dTbNaKKO83iB4tsYDfmpusH0C6veTYXjy7Om"; 
-        const APP_ID = "com.sarcastichedgehog.demolition"; 
+    const API_KEY = window.APP_CONFIG?.API_KEY || "Your API Key from multisynq.io/code";
+    const APP_ID = window.APP_CONFIG?.APP_ID || "com.domain.game  (Reversed domain name and game name)"; 
 
         const CAR_IMAGE_PATHS = [ 
             "assets/1car.png", "assets/2car.png", "assets/3car.png", "assets/4car.png",

@@ -1,0 +1,14 @@
+# .gitignore
+
+# Secret configuration
+.env
+
+# Other common ignores (Node.js specific, add as needed)
+node_modules/
+npm-debug.log
+*.log
+config.js
+
+# macOS
+.DS_Store
+demolition_ONLY USE FOR CAR DIRECTION.html
