@@ -1,0 +1,64 @@
+Concept Overview:
+We are crafting an exhilarating real-time multiplayer demolition derby. The experience will be delivered as a top-down 2D game within a single, self-contained HTML file, leveraging the power of MultiSynq for fluid, synchronized gameplay across all participants. The aesthetic should be arcade-inspired, with clear visuals and engaging, physics-based interactions.
+Core Gameplay Experience:
+The Combatants & Their Steeds:
+The arena hosts up to eight unique player-controlled vehicles. No AI entities will be present.
+Vehicle Representation: Each player is assigned one of eight distinct PNG sprite assets (located at assets/1car.png through assets/8car.png). These sprites are designed with dimensions of 64px (width) by 128px (height), and critically, their forward orientation (the "nose" of the car) is directed towards the top of the image file (along its 128px axis).
+Visual Scaling: On-screen, these sprites should be rendered at an approximate visual scale of 0.7 (CAR_VISUAL_SCALE) relative to their source dimensions.
+Collision Hull: For physics interactions, each vehicle will utilize a logical collision rectangle tighter than its visual footprint, defined by COLLISION_WIDTH = 35 units and COLLISION_HEIGHT = 65 units.
+The Arena – Stage for Destruction:
+The world space is a 1000x600 unit canvas.
+The primary play area is an oval dirt track, visually distinct from its surroundings. This track is defined by an ARENA_PADDING = 50 units from the world edges and possesses a substantial TRACK_THICKNESS = 200 units.
+The central area formed by the inner perimeter of the oval is an impassable zone, demarcated by tyre barriers.
+Boundary Interaction: Contact with either the outer or inner tyre walls will result in a mild, dampened bounce, characterized by WALL_BOUNCE_FACTOR = -0.3 (reversing a portion of the velocity component normal to the wall).
+Vehicle Dynamics & Control (Arcade Physics Model):
+Input Schemes:
+Desktop: Standard Arrow keys and WASD for directional control (Up/W: Accelerate; Down/S: Brake/Reverse; Left/A: Steer Left; Right/D: Steer Right).
+Mobile (Landscape): Intuitive on-screen touch buttons. Left cluster: "Turn Left" (ᐊ), "Turn Right" (ᐅ). Right cluster: "Accelerate" (ᐃ), "Brake/Reverse" (ᐁ). These controls should be positioned to avoid obscuring the default MultiSynq QR code widget (e.g., left controls inset by approximately 100px from the screen edge).
+Kinematics:
+Acceleration (ACCELERATION = 0.15) propels vehicles towards a MAX_SPEED = 8.
+Unpowered vehicles experience natural friction, decelerating from MAX_SPEED to a standstill over approximately 8 seconds (assuming MODEL_TICK_MS = 20, i.e., ~50 physics updates per second).
+Braking provides deceleration 3x more effective than natural friction and enables slow reverse movement.
+Steering (TURN_SPEED = 0.06 radians per physics update) is effective only when the vehicle has a non-negligible velocity (e.g., speed > 0.05).
+Orientation & Movement Vector Alignment:
+The model's canonical angle = 0 radians corresponds to the vehicle's logical "front" pointing towards the world's positive X-axis (right).
+Given vehicle sprites are designed with their "front" oriented upwards in the image file, the view rendering must apply a +Math.PI / 2 rotation to car.angle to correctly align the visual "front" of the sprite with the model's angle.
+Consequently, to ensure player "forward" input moves the car in its visually perceived forward direction, the model's translation calculation must use a movementAngle = modelAngle + Math.PI.
+Collision & Damage Model:
+Vehicles begin with 0 damage and are "wrecked" upon accumulating MAX_DAMAGE = 30 points.
+Impact Mechanics (Symmetrical & Speed-Dependent): When two vehicles (A and B) collide, damage is assessed reciprocally:
+Damage Dealt by Vehicle A to Vehicle B:
+Identify the impact zone on Vehicle A (Front: base 5; Trunk/Boot: base 3; Side: base 1). This is basePointsFromA.
+Calculate A's impact speed factor: speedFactorA = carA.speedAtImpact / MAX_SPEED (clamped between a small minimum like 0.1 and 1.0 to ensure minor taps still register some effect).
+Damage to B = basePointsFromA * speedFactorA.
+Damage Dealt by Vehicle B to Vehicle A: Calculated analogously, using B's impact zone and speedFactorB.
+(Initial hit zone determination will be a heuristic based on relative angles and collision points.)
+Physical Collision Response: Vehicles should exhibit a noticeable bounce and a degree of momentum transfer upon collision.
+Performance Degradation: At damage >= 15, a vehicle's MAX_SPEED is halved.
+Wrecked State: A vehicle reaching MAX_DAMAGE becomes immobile, its controls are disabled, and its visual representation changes to a "wrecked" state (e.g., explosion graphic 💥). Wrecked vehicles persist as obstacles for the duration of the current round.
+Session and Round Progression:
+Initial State: The session begins in a "waiting" state until minPlayersToStartRound = 2 have connected. A message "Waiting for Players (X/2)..." should be displayed.
+Pre-Round Countdown: Upon reaching 2 players, a PRE_ROUND_COUNTDOWN_MS = 5000 (5-second) "Get Ready!" countdown commences, visible to all connected clients. Players who join the session during this countdown are eligible to participate in the imminent round.
+Round Start: Vehicles are reset (0 damage, full speed potential) and placed at designated starting positions on the track.
+Mid-Round Joins (Spectators): Players connecting after a round has begun (and while fewer than MAX_RACING_PLAYERS = 8 are active) will enter as spectators. Their vehicle model is instantiated but flagged as isRacing: false and positioned off-screen. They will observe the ongoing round.
+Round Conclusion: A round concludes when, from the set of competitively participating vehicles (i.e., roundCarCount >= minPlayersToCompeteForWin = 2), only one (or zero, indicating a draw) remains operational.
+Post-Round Display: A "Game Over! [Victor's Identifier] WINS!" or "It's a DRAW!" message is shown.
+Inter-Round Restart: Following round conclusion, a GAME_RESTART_DELAY_MS = 10000 (10-second) countdown for the subsequent round is displayed to all clients.
+Next Round Composition: All clients present in the session (including previous spectators) become candidates for the new round. Up to MAX_RACING_PLAYERS are selected (e.g., by current map order), their vehicles reset, and they are designated as isRacing: true. Any additional players revert to/remain spectators.
+Player Disconnection: If a player disconnects, their vehicle is removed.
+If during a pre-round countdown, and the count drops below minPlayersToStartRound, the countdown cancels, and the game returns to "Waiting for players."
+If mid-round, the game proceeds, and win conditions are checked based on remaining participants.
+User Interface Elements:
+Player HUD: Each client displays their own vehicle's current damage score ("Damage: X") at the screen's bottom-center, using the "Press Start 2P" font.
+Centralized Status Messages: Overlay messages in the screen center for "Waiting for Players...", "Get Ready! Starting in: X", "Game Over! ...", and "Next round in: X".
+Technical Foundation:
+Core Libraries: Vanilla JavaScript (ES6+), HTML5 Canvas.
+Synchronization: MultiSynq client SDK, loaded via CDN. Adherence to MultiSynq's Model-View architecture is paramount.
+Styling: TailwindCSS (via CDN) for general UI elements. Game-specific visuals via Canvas API.
+Configuration Management: Utilize a config.js file (intended to be gitignored) for API_KEY and APP_ID. The main script should include fallback placeholders (e.g., "YOUR_API_KEY_PLACEHOLDER", "com.yourdomain.fallback_app_id") if config.js or window.APP_CONFIG is not found.
+Session Facilitation: The MultiSynq App.makeWidgetDock() should be enabled for QR code based session joining.
+Initial Development Milestones (Suggested):
+Stable 2-player join sequence: P1 joins (Waits) -> P2 joins -> Shared "Get Ready!" countdown -> Round starts with both cars controllable and correctly oriented.
+Implement basic speed-scaled damage (simplified hit zones).
+Verify round end, "Game Over" message, restart countdown, and subsequent round start with original players.
+Then, layer in spectator joining and inclusion in subsequent rounds.
