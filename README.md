@@ -2,8 +2,6 @@
 
 **A real-time multiplayer demolition derby game built with HTML5 Canvas, JavaScript, and powered by MultiSynq for seamless synchronization!**
 
-[![DemoDerby Gameplay Screenshot/GIF](https://sarcyhedgehog.github.io/DemoDerby/screenshot.png)](https://sarcyhedgehog.github.io/DemoDerby/demolition.html)
-
 
 ---
 
