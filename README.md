@@ -5,8 +5,6 @@
 [![DemoDerby Gameplay Screenshot/GIF](https://sarcyhedgehog.github.io/DemoDerby/screenshot.png)](https://sarcyhedgehog.github.io/DemoDerby/demolition.html)
 
 
-➡️ **[Play DemoDerby Live!](https://sarcyhedgehog.github.io/DemoDerby/demolition.html)** ⬅️
-
 ---
 
 ## About The Game
