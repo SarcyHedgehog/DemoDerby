@@ -36,6 +36,7 @@ jobs:
           mkdir -p "$TARGET_DIR"
           cp ./demoderby_game/index.html "$TARGET_DIR/index.html"
           cp ./demoderby_game/config.js "$TARGET_DIR/config.js"
+          cp -r ./demoderby_game/assets "$TARGET_DIR/assets"
         shell: bash
 
       - name: Commit and push changes to website repo
