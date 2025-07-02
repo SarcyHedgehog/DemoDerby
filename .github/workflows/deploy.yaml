@@ -34,7 +34,7 @@ jobs:
         run: |
           TARGET_DIR="./website_repo/demoderby"
           mkdir -p "$TARGET_DIR"
-          cp ./demoderby_game/demolition.html "$TARGET_DIR/index.html"
+          cp ./demoderby_game/index.html "$TARGET_DIR/index.html"
           cp ./demoderby_game/config.js "$TARGET_DIR/config.js"
         shell: bash
 
