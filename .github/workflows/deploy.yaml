@@ -1,57 +1,57 @@
 name: Deploy DemoDerby to sarcastichedgehog.com
-
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout DemoDerby repo
+      - name: Checkout DemoDerby
         uses: actions/checkout@v4
         with:
           path: demoderby_game
-
-      - name: Create config.js for DemoDerby
-        working-directory: ./demoderby_game
-        run: |
-          echo "window.APP_CONFIG = {" > config.js
-          echo "  API_KEY: \"${{ secrets.MULTISYNQ_API_KEY }}\"," >> config.js
-          echo "  APP_ID: \"${{ secrets.MULTISYNQ_APP_ID }}\"" >> config.js
-          echo "};" >> config.js
-        shell: bash
-
-      - name: Checkout sarcastichedgehog.com website repo
+      - name: Checkout website
         uses: actions/checkout@v4
         with:
           repository: SarcyHedgehog/sarcastichedgehog.com
           path: website_repo
           token: ${{ secrets.GH_PAGES_DEPLOY_TOKEN }}
-
-      - name: Copy DemoDerby files to website repo
-        run: |
-          TARGET_DIR="./website_repo/demoderby"
-          mkdir -p "$TARGET_DIR"
-          cp ./demoderby_game/index.html "$TARGET_DIR/index.html"
-          cp ./demoderby_game/config.js "$TARGET_DIR/config.js"
-          cp -r ./demoderby_game/assets "$TARGET_DIR/assets"
-        shell: bash
-
-      - name: Commit and push changes to website repo
+      - name: Replace deployed game with Photon build
         env:
-          GIT_USER_NAME: "GitHub Actions Bot"
-          GIT_USER_EMAIL: "actions@github.com"
+          PHOTON_APP_ID: ${{ secrets.PHOTON_APP_ID }}
+        run: |
+          TARGET="./website_repo/demoderby"
+          if [[ -z "$PHOTON_APP_ID" ]]; then
+            echo "PHOTON_APP_ID repository secret is not configured."
+            exit 1
+          fi
+          mkdir -p "$TARGET"
+          rsync -av --delete \
+            --include='/index.html' \
+            --include='/styles.css' \
+            --include='/fixes.css' \
+            --include='/manifest.json' \
+            --include='/icon.svg' \
+            --include='/sw.js' \
+            --include='/src/***' \
+            --include='/assets/[1-8]car.png' \
+            --include='/vendor/***' \
+            --exclude='*' \
+            ./demoderby_game/ "$TARGET/"
+          printf '%s\n' \
+            'window.APP_CONFIG = {' \
+            "  PHOTON_APP_ID: \"$PHOTON_APP_ID\"," \
+            '  PHOTON_REGION: "eu",' \
+            '  PHOTON_SDK_URL: "vendor/photon.min.js",' \
+            '  DEBUG: false,' \
+            '};' > "$TARGET/config.js"
+      - name: Commit website update
         run: |
           cd ./website_repo
-          if [[ -z $(git status --porcelain) ]]; then
-            echo "No changes to commit."
-          else
-            git config user.name "${GIT_USER_NAME}"
-            git config user.email "${GIT_USER_EMAIL}"
-            git add .
+          if [[ -n $(git status --porcelain) ]]; then
+            git config user.name "GitHub Actions Bot"
+            git config user.email "actions@github.com"
+            git add demoderby
             git commit -m "Deploy DemoDerby update"
             git push origin main
           fi
-        shell: bash

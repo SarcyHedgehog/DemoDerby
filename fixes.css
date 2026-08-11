@@ -1,0 +1,17 @@
+dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  margin: 0;
+  background: rgba(5, 6, 7, 0.96);
+}
+.practice {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  border: 1px solid #4b5359;
+  background: #20262a;
+  color: #dfe3e4;
+  font-weight: 850;
+  cursor: pointer;
+}
