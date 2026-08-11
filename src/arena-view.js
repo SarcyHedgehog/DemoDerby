@@ -1,4 +1,4 @@
-import { CAR, WORLD } from "./constants.js";
+import { CAR, COLORS, WORLD } from "./constants.js";
 
 export class ArenaView {
   constructor(canvas, audio) {
@@ -7,7 +7,7 @@ export class ArenaView {
     this.images = []; this.localActor = null; this.followActor = null; this.shake = 0; this.lastCountdown = null; this.lastPhase = null;
     this.loadCars(); this.resize(); window.addEventListener("resize", () => this.resize()); requestAnimationFrame(time => this.frame(time));
   }
-  async loadCars() { this.images = await Promise.all(Array.from({ length: 8 }, (_, i) => loadImage(`assets/${i + 1}car.png`))); }
+  async loadCars() { const originals = await Promise.all(Array.from({ length: 8 }, (_, i) => loadImage(`assets/${i + 1}car.png`))); this.images = originals.map((image,index) => recolorCar(image,COLORS[index])); }
   setLocalActor(actor) { this.localActor = String(actor); }
   setFollowActor(actor) { this.followActor = actor ? String(actor) : null; }
   resize() {
@@ -68,10 +68,7 @@ export class ArenaView {
     if (image) {
       const drawX = -image.width * 0.35, drawY = -image.height * 0.35, drawWidth = image.width * 0.7, drawHeight = image.height * 0.7;
       ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
-      ctx.save(); ctx.globalCompositeOperation = "source-atop"; ctx.globalAlpha = 0.72; ctx.fillStyle = car.color; ctx.fillRect(drawX, drawY, drawWidth, drawHeight); ctx.restore();
     } else { ctx.fillStyle = car.color; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
-    ctx.fillStyle = car.color; ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.5; roundRect(ctx, -13, -8, 26, 16, 4); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#111"; ctx.font = "900 11px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String((car.visualIndex || 0) + 1), 0, 0); ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#fff3a4"; ctx.shadowColor = "#fff3a4"; ctx.shadowBlur = 8; ctx.fillRect(-15, -31, 9, 5); ctx.fillRect(6, -31, 9, 5); ctx.shadowBlur = 0;
     ctx.fillStyle = "#151719"; ctx.fillRect(-15, 28, 30, 5);
     ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(-5,-17); ctx.lineTo(5,-17); ctx.closePath(); ctx.fill();
@@ -93,4 +90,10 @@ function interpolateCar(a, b, alpha) { const angleDelta = Math.atan2(Math.sin(b.
 function ellipsePath(ctx, x, y, rx, ry) { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); }
 function roundRect(ctx, x, y, width, height, radius) { ctx.beginPath(); ctx.roundRect(x, y, width, height, radius); }
 function loadImage(src) { return new Promise(resolve => { const image = new Image(); image.onload = () => resolve(image); image.onerror = () => resolve(null); image.src = src; }); }
+function recolorCar(image, color) {
+  if (!image) return null; const canvas=document.createElement("canvas");canvas.width=image.naturalWidth||image.width;canvas.height=image.naturalHeight||image.height;const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(image,0,0);const pixels=ctx.getImageData(0,0,canvas.width,canvas.height),data=pixels.data;const target=hexToRgb(color);
+  for(let i=0;i<data.length;i+=4){const r=data[i],g=data[i+1],b=data[i+2];if(data[i+3]&&r>85&&r>g*1.28&&r>b*1.18){const shade=Math.max(.2,Math.min(1.15,(r*.78+g*.14+b*.08)/205));data[i]=Math.min(255,target.r*shade);data[i+1]=Math.min(255,target.g*shade);data[i+2]=Math.min(255,target.b*shade);}}
+  ctx.putImageData(pixels,0,0);return canvas;
+}
+function hexToRgb(hex){const value=parseInt(hex.slice(1),16);return{r:(value>>16)&255,g:(value>>8)&255,b:value&255};}
 function asphaltPattern(ctx) { const tile = document.createElement("canvas"); tile.width = tile.height = 96; const c = tile.getContext("2d"); c.fillStyle="#35383a";c.fillRect(0,0,96,96);for(let i=0;i<260;i+=1){const shade=40+Math.random()*35;c.fillStyle=`rgba(${shade},${shade},${shade},.2)`;c.fillRect(Math.random()*96,Math.random()*96,Math.random()*2+1,Math.random()*2+1);}return ctx.createPattern(tile,"repeat"); }

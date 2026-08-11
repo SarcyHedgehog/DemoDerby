@@ -26,11 +26,11 @@
           <div class="steer"><button data-control="left" aria-label="Steer left">◀</button><button data-control="right" aria-label="Steer right">▶</button></div>
           <div class="pedals"><button data-control="brake" aria-label="Brake or reverse">BACK</button><button data-control="forward" aria-label="Accelerate forward">FWD</button></div>
         </div>
+        <section class="spectator-tools" id="spectator-tools" hidden><label for="follow">Spectating — follow car</label><select id="follow"></select></section>
       </div>
       <aside class="race-panel">
         <div class="panel-heading"><div><small id="room-label">ROOM —</small><h2>Drivers</h2></div><button id="reset" class="icon-button" title="Restart arena" hidden>↻</button></div>
         <ol id="standings" class="standings"><li class="empty">No tyre marks yet.</li></ol>
-        <section class="spectator-tools" id="spectator-tools" hidden><label for="follow">Spectator camera</label><select id="follow"></select></section>
         <section class="event-feed"><h3>Impact report</h3><ul id="events"><li>Awaiting drivers…</li></ul></section>
         <section class="controls-key"><h3>Controls</h3><p><kbd>W</kbd>/<kbd>↑</kbd> accelerate · <kbd>S</kbd>/<kbd>↓</kbd> brake/reverse · <kbd>A</kbd><kbd>D</kbd> steer</p></section>
       </aside>

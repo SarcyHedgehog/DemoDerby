@@ -23,3 +23,21 @@ dialog {
 .ledger-row i { width: 10px; height: 10px; border-radius: 50%; background: var(--impact); box-shadow: 0 0 7px var(--impact); }
 .ledger-row b { color: white; font-size: 11px; }
 .empty-ledger { color: #676d70; font-size: 9px; padding: 3px 0; }
+body.spectating .touch-controls { display: none !important; }
+body.spectating .damage-hud, body.spectating .speed-hud { display: none; }
+.arena-wrap > .spectator-tools {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  min-width: min(330px, calc(100vw - 32px));
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #5a5144;
+  background: rgba(8, 10, 12, .9);
+  box-shadow: 0 10px 35px #000b;
+  text-align: center;
+}
+.arena-wrap > .spectator-tools label { color: #f2d45c; font-weight: 900; letter-spacing: 1.2px; }
+.arena-wrap > .spectator-tools select { margin-top: 6px; }
