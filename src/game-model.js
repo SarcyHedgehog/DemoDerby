@@ -38,7 +38,8 @@ export class DerbyModel {
   beginRound() {
     const connected = this.connectedCars(); if (connected.length < MIN_PLAYERS) return this.toLobby();
     this.round += 1; this.phase = "countdown"; this.phaseTime = COUNTDOWN_SECONDS; this.winnerId = null;
-    connected.slice(0, MAX_PLAYERS).forEach((car, index) => this.resetCar(car, index, true));
+    const racers = connected.slice(0, MAX_PLAYERS);
+    racers.forEach((car, index) => this.resetCar(car, index, true, racers.length));
     connected.slice(MAX_PLAYERS).forEach(car => this.resetCar(car, 0, false));
     Object.values(this.cars).filter(car => !car.connected).forEach(car => this.deletePlayer(car.id));
     this.events.push({ type: "countdown", round: this.round });
@@ -91,8 +92,16 @@ export class DerbyModel {
     car.maxSpeed = car.damage >= 15 ? CAR.maxSpeed * 0.52 : CAR.maxSpeed * (1 - car.damage * 0.012); if (attacker) attacker.stats.damageDealt += car.damage - before;
     if (car.damage >= CAR.maxDamage) { car.destroyed = true; car.speed = 0; car.input = emptyInput(); car.stats.wrecks += 1; if (attacker) attacker.stats.knockouts += 1; this.events.push({ type: "wreck", id: car.id, attacker: attacker?.id || null, source }); }
   }
-  resetCar(car, index, racing) {
-    const columns = 2; car.x = 170 + Math.floor(index / columns) * 88; car.y = WORLD.height / 2 + (index % columns ? 55 : -55); car.angle = 0; car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.racing = racing; car.input = emptyInput();
+  resetCar(car, index, racing, total = 1) {
+    if (racing) {
+      const theta = -Math.PI / 2 + index * Math.PI * 2 / Math.max(1, total);
+      const laneX = WORLD.width / 2 - (WORLD.padding + WORLD.infield) / 2;
+      const laneY = WORLD.height / 2 - (WORLD.padding + WORLD.infield * 0.66) / 2;
+      car.x = WORLD.width / 2 + Math.cos(theta) * laneX;
+      car.y = WORLD.height / 2 + Math.sin(theta) * laneY;
+      car.angle = theta + Math.PI / 2;
+    } else { car.x = WORLD.width / 2; car.y = WORLD.height / 2; car.angle = 0; }
+    car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.racing = racing; car.input = emptyInput();
   }
   makeCar(id, name, slot) {
     return { id, name: safeName(name), color: COLORS[slot % COLORS.length], visualIndex: slot % 8, connected: true, racing: false, x: 160, y: WORLD.height / 2, angle: 0, speed: 0, damage: 0, maxSpeed: CAR.maxSpeed, destroyed: false, input: emptyInput(), stats: { wins: 0, hits: 0, wrecks: 0, knockouts: 0, damageDealt: 0, distance: 0 } };

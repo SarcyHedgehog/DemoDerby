@@ -64,7 +64,11 @@ export class ArenaView {
     ctx.save(); ctx.translate(car.x + 5, car.y + 7); ctx.rotate(car.angle + Math.PI / 2); ctx.scale(1, 0.7); ctx.fillStyle = "rgba(0,0,0,.42)"; ctx.beginPath(); ctx.ellipse(0, 0, 29, 42, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     ctx.save(); ctx.translate(car.x, car.y); ctx.rotate(car.angle + Math.PI / 2);
     if (local || followed) { ctx.shadowColor = local ? "#fff4a3" : "#4be8ff"; ctx.shadowBlur = 20; ctx.strokeStyle = local ? "#fff4a3" : "#4be8ff"; ctx.lineWidth = 3; ctx.strokeRect(-25, -39, 50, 78); }
-    if (image) ctx.drawImage(image, -image.width * 0.35, -image.height * 0.35, image.width * 0.7, image.height * 0.7); else { ctx.fillStyle = car.color; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
+    if (image) {
+      const drawX = -image.width * 0.35, drawY = -image.height * 0.35, drawWidth = image.width * 0.7, drawHeight = image.height * 0.7;
+      ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+      ctx.save(); ctx.globalCompositeOperation = "source-atop"; ctx.globalAlpha = 0.72; ctx.fillStyle = car.color; ctx.fillRect(drawX, drawY, drawWidth, drawHeight); ctx.restore();
+    } else { ctx.fillStyle = car.color; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
     ctx.fillStyle = car.color; ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.5; roundRect(ctx, -13, -8, 26, 16, 4); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#111"; ctx.font = "900 11px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String((car.visualIndex || 0) + 1), 0, 0); ctx.textBaseline = "alphabetic";
     if (car.damage > 9) { ctx.fillStyle = `rgba(30,30,30,${0.15 + car.damage / 70})`; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
