@@ -55,7 +55,7 @@ export class ArenaView {
     const cx = WORLD.width / 2, cy = WORLD.height / 2;
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(-0.04); ctx.fillStyle = "rgba(0,0,0,.45)"; roundRect(ctx, -184, -78, 368, 156, 18); ctx.fill();
     ctx.fillStyle = "#e8d56e"; ctx.font = "900 46px system-ui"; ctx.textAlign = "center"; ctx.fillText("DEMO DERBY", 0, -8); ctx.fillStyle = "#e34a34"; ctx.font = "800 18px system-ui"; ctx.fillText("LAST CAR MOVING WINS", 0, 30);
-    ctx.fillStyle = "#697078"; for (const x of [-220, 220]) { ctx.fillRect(x - 6, -110, 12, 220); ctx.fillStyle = "#d8dee2"; ctx.fillRect(x - 22, -118, 44, 20); ctx.fillStyle = "#697078"; } ctx.restore();
+    ctx.restore();
   }
   drawFloodlights(ctx, time) { ctx.save(); ctx.globalCompositeOperation = "screen"; const pulse = 0.11 + Math.sin(time / 600) * 0.015; for (const [x, y] of [[80,80],[1120,80],[80,640],[1120,640]]) { const glow = ctx.createRadialGradient(x,y,0,x,y,170); glow.addColorStop(0, `rgba(255,239,180,${pulse * 2.3})`); glow.addColorStop(1,"rgba(255,239,180,0)"); ctx.fillStyle=glow;ctx.fillRect(x-170,y-170,340,340); } ctx.restore(); }
   drawCar(ctx, car, id, time) {
