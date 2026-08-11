@@ -20,11 +20,11 @@
       <div class="arena-wrap">
         <canvas id="arena" aria-label="DemoDerby arena"></canvas>
         <div id="phase-card" class="phase-card"><small>ARENA STATUS</small><strong id="phase-title">Waiting in the pits</strong><span id="phase-detail">Two drivers are required</span></div>
-        <div class="hud damage-hud"><span>DAMAGE</span><meter id="damage" min="0" max="20" value="0"></meter><strong id="damage-label">0 / 20</strong><div class="damage-ledger-head"><i></i><b>CAUSED</b><b>RECEIVED</b></div><div id="damage-ledger" class="damage-ledger"><div class="empty-ledger">No contact yet</div></div></div>
+        <div class="hud damage-hud"><span>DAMAGE</span><meter id="damage" min="0" max="100" value="0"></meter><strong id="damage-label">0 / 100</strong><div class="damage-ledger-head"><i></i><b>CAUSED</b><b>RECEIVED</b></div><div id="damage-ledger" class="damage-ledger"><div class="empty-ledger">No contact yet</div></div></div>
         <div class="hud speed-hud"><span>SPEED</span><strong id="speed">000</strong><small>MPH-ish</small></div>
         <div id="touch-controls" class="touch-controls" aria-label="Driving controls">
           <div class="steer"><button data-control="left" aria-label="Steer left">◀</button><button data-control="right" aria-label="Steer right">▶</button></div>
-          <div class="pedals"><button data-control="brake" aria-label="Brake or reverse">BRAKE</button><button data-control="forward" aria-label="Accelerate">GO</button></div>
+          <div class="pedals"><button data-control="brake" aria-label="Brake or reverse">BACK</button><button data-control="forward" aria-label="Accelerate forward">FWD</button></div>
         </div>
       </div>
       <aside class="race-panel">
@@ -41,7 +41,7 @@
     <form id="join-form" method="dialog" class="join-card">
       <div class="eyebrow">SARCASTIC HEDGEHOG MOTORSPORT</div>
       <h1>DEMO<span>DERBY</span></h1>
-      <p>Eight cars. Twenty damage. One survivor.</p>
+      <p>Five cars. One hundred damage. One survivor.</p>
       <label>Driver name<input id="driver-name" maxlength="18" autocomplete="nickname" required value="Roadkill"></label>
       <label>Arena code<input id="room-code" maxlength="12" inputmode="text" required value="SMASH"></label>
       <button class="enter" type="submit">ENTER THE ARENA</button>

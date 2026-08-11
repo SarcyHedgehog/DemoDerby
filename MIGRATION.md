@@ -24,5 +24,4 @@ The master persists a complete snapshot in the `dd_state` room property approxim
 
 ## Deliberately retained
 
-The original directional damage system, twenty-point damage limit, performance degradation, persistent wreck obstacles, two-to-eight-player rounds, automatic restarts and spectator behavior remain central to the game.
-
+The original directional damage system, performance degradation, automatic restarts and spectator behavior remain central to the game. Playtesting capped the active arena at five cars, with later arrivals spectating. The write-off threshold was increased from twenty to one hundred, and wrecks now fade from the arena after five seconds.

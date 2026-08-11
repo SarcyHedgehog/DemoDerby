@@ -1,15 +1,15 @@
 # DemoDerby
 
-DemoDerby is a fast, top-down multiplayer demolition derby for two to eight drivers. It began as a deterministic Multisynq experiment and has been rebuilt on Photon Realtime while retaining the repository’s complete history.
+DemoDerby is a fast, top-down multiplayer demolition derby for two to five active drivers, with additional visitors joining as spectators. It began as a deterministic Multisynq experiment and has been rebuilt on Photon Realtime while retaining the repository’s complete history.
 
 ## The rules
 
 - The last car moving wins the round.
-- Cars can absorb 20 damage.
+- Cars can absorb 100 damage.
 - Front-first hits deal the most damage, side hits deal medium damage, and rear contact deals the least.
-- At 15 damage a car loses much of its top speed.
+- At 75 damage a car loses much of its top speed.
 - Wrecks remain in the arena as obstacles.
-- Extra and late-arriving users can spectate and follow a driver.
+- A maximum of five cars race at once. Extra and late-arriving users can spectate and follow a driver.
 
 ## Controls
 

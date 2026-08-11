@@ -72,10 +72,16 @@ export class ArenaView {
     } else { ctx.fillStyle = car.color; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
     ctx.fillStyle = car.color; ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1.5; roundRect(ctx, -13, -8, 26, 16, 4); ctx.fill(); ctx.stroke();
     ctx.fillStyle = "#111"; ctx.font = "900 11px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(String((car.visualIndex || 0) + 1), 0, 0); ctx.textBaseline = "alphabetic";
-    if (car.damage > 9) { ctx.fillStyle = `rgba(30,30,30,${0.15 + car.damage / 70})`; roundRect(ctx, -20, -34, 40, 68, 8); ctx.fill(); }
-    if (car.destroyed) { ctx.fillStyle = "rgba(30,20,16,.65)"; roundRect(ctx, -22, -36, 44, 72, 8); ctx.fill(); }
+    ctx.fillStyle = "#fff3a4"; ctx.shadowColor = "#fff3a4"; ctx.shadowBlur = 8; ctx.fillRect(-15, -31, 9, 5); ctx.fillRect(6, -31, 9, 5); ctx.shadowBlur = 0;
+    ctx.fillStyle = "#151719"; ctx.fillRect(-15, 28, 30, 5);
+    ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(0,-24); ctx.lineTo(-5,-17); ctx.lineTo(5,-17); ctx.closePath(); ctx.fill();
+    if (car.damage > 20) {
+      const scars = Math.min(5, Math.ceil(car.damage / 20)); ctx.strokeStyle = `rgba(245,245,235,${0.22 + car.damage / 260})`; ctx.lineWidth = 1.5;
+      for (let i = 0; i < scars; i += 1) { const offset = -17 + i * 8; ctx.beginPath(); ctx.moveTo(-13, offset); ctx.lineTo(12, offset + 8); ctx.moveTo(-10, offset + 7); ctx.lineTo(9, offset - 2); ctx.stroke(); }
+    }
+    if (car.destroyed) { ctx.strokeStyle = "#ff9c43"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-16,-19);ctx.lineTo(16,19);ctx.moveTo(16,-19);ctx.lineTo(-16,19);ctx.stroke(); }
     ctx.restore();
-    if (car.damage >= 15) { const amount = car.destroyed ? 4 : 1; for (let i = 0; i < amount; i += 1) { ctx.fillStyle = `rgba(115,115,115,${0.12 + Math.random() * 0.15})`; ctx.beginPath(); ctx.arc(car.x + (Math.random() - .5) * 14, car.y - 28 - Math.random() * 28, 7 + Math.random() * 11, 0, Math.PI * 2); ctx.fill(); } }
+    if (car.damage >= 55) { const amount = car.destroyed ? 4 : Math.min(3, Math.ceil((car.damage - 45) / 20)); for (let i = 0; i < amount; i += 1) { const sx=car.x+(Math.random()-.5)*14, sy=car.y-25-Math.random()*24, radius=8+Math.random()*12; const smoke=ctx.createRadialGradient(sx,sy,0,sx,sy,radius); smoke.addColorStop(0,"rgba(125,125,125,.2)");smoke.addColorStop(1,"rgba(90,90,90,0)");ctx.fillStyle=smoke;ctx.beginPath();ctx.arc(sx,sy,radius,0,Math.PI*2);ctx.fill(); } }
     ctx.font = "700 16px system-ui"; ctx.textAlign = "center"; ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillText(car.name, car.x + 1, car.y - 49 + 1); ctx.fillStyle = "white"; ctx.fillText(car.name, car.x, car.y - 49); ctx.restore();
   }
   drawEffects(ctx, dt) {

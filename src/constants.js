@@ -1,6 +1,6 @@
 export const WORLD = { width: 1200, height: 720, padding: 54, infield: 355 };
-export const CAR = { width: 38, height: 68, radius: 38, maxSpeed: 390, reverseSpeed: 150, acceleration: 330, brake: 460, drag: 120, turnSpeed: 2.7, maxDamage: 20 };
-export const MAX_PLAYERS = 8;
+export const CAR = { width: 38, height: 68, radius: 38, maxSpeed: 390, reverseSpeed: 150, acceleration: 330, brake: 460, drag: 120, turnSpeed: 2.7, maxDamage: 100 };
+export const MAX_PLAYERS = 5;
 export const MIN_PLAYERS = 2;
 export const FIXED_STEP = 1 / 50;
 export const SNAPSHOT_MS = 66;
