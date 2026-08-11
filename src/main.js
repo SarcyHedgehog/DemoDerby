@@ -31,7 +31,7 @@ function wireRoom(next) {
 }
 function render(snapshot) {
   const myCar = snapshot.cars[String(room.myActor())]; const active = myCar?.racing && !myCar.destroyed && snapshot.phase === "playing";
-  audio.setEngine(myCar?.speed || 0, myCar?.damage || 0, active); ui.damage.value = myCar?.damage || 0; ui.damageLabel.textContent = `${Math.round(myCar?.damage || 0)} / ${CAR.maxDamage}`; ui.speed.textContent = String(Math.round(Math.abs(myCar?.speed || 0) * 0.32)).padStart(3, "0"); renderDamageLedger(myCar, snapshot);
+  ui.damage.value = myCar?.damage || 0; ui.damageLabel.textContent = `${Math.round(myCar?.damage || 0)} / ${CAR.maxDamage}`; ui.speed.textContent = String(Math.round(Math.abs(myCar?.speed || 0) * 0.32)).padStart(3, "0"); renderDamageLedger(myCar, snapshot);
   document.body.classList.toggle("wrecked", !!myCar?.destroyed); document.body.classList.toggle("spectating", !myCar?.racing); ui.spectator.hidden = !!myCar?.racing;
   setPhase(snapshot); renderStandings(snapshot); renderEvents(snapshot); updateFollow(snapshot); ui.reset.hidden = !room.isMaster();
 }

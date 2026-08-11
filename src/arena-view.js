@@ -18,13 +18,15 @@ export class ArenaView {
     if (!snapshot) return; const old = this.current; this.previous = old || snapshot; this.current = snapshot; this.receivedAt = performance.now();
     for (const event of snapshot.events || []) this.consumeEvent(event);
     const countdown = snapshot.phase === "countdown" ? Math.ceil(snapshot.phaseTime) : snapshot.phase === "playing" && this.lastPhase === "countdown" ? 0 : null;
-    if (countdown !== null && countdown !== this.lastCountdown) { this.audio.countdown(countdown); this.lastCountdown = countdown; }
+    if (countdown !== null && countdown !== this.lastCountdown) { if (countdown > 0) this.audio.countdown(countdown); this.lastCountdown = countdown; }
     if (snapshot.phase === "results" && this.lastPhase !== "results") this.audio.fanfare(); this.lastPhase = snapshot.phase;
   }
   consumeEvent(event) {
     if (event.type === "collision") { this.spark(event.x, event.y, event.power); this.audio.hit(event.power); if ([event.a,event.b].includes(this.localActor) || [event.a,event.b].includes(this.followActor)) this.shake = Math.max(this.shake, 1 + event.power * 4); }
     if (event.type === "wall") { this.spark(event.x, event.y, event.power * 0.5); this.audio.wall(event.power); }
     if (event.type === "wreck") { const car = this.current?.cars?.[event.id]; if (car) this.smokeBurst(car.x, car.y); this.audio.wreck(); if (event.id === this.localActor || event.id === this.followActor) this.shake = 6; }
+    if (event.type === "start") this.audio.startRace();
+    if (event.type === "remove") this.audio.disappear();
   }
   spark(x, y, power = 0.5) { for (let i = 0; i < 8 + power * 18; i += 1) this.effects.push({ kind: "spark", x, y, vx: (Math.random() - 0.5) * 310 * power, vy: (Math.random() - 0.5) * 310 * power, age: 0, life: 0.25 + Math.random() * 0.45 }); }
   smokeBurst(x, y) { for (let i = 0; i < 24; i += 1) this.effects.push({ kind: "smoke", x, y, vx: (Math.random() - 0.5) * 70, vy: -25 - Math.random() * 60, age: 0, life: 1.5 + Math.random() }); }
@@ -64,7 +66,10 @@ export class ArenaView {
     if (Math.abs(car.speed) > 80 && !car.destroyed && Math.random() < 0.18) this.trails.push({ x: car.x - Math.cos(car.angle) * 30, y: car.y - Math.sin(car.angle) * 30, age: 0, life: 1.6 });
     ctx.save(); ctx.translate(car.x + 5, car.y + 7); ctx.rotate(car.angle + Math.PI / 2); ctx.scale(1, 0.7); ctx.fillStyle = "rgba(0,0,0,.42)"; ctx.beginPath(); ctx.ellipse(0, 0, 29, 42, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
     ctx.save(); ctx.translate(car.x, car.y); ctx.rotate(car.angle + Math.PI / 2);
-    if (local || followed) { ctx.shadowColor = local ? "#fff4a3" : "#4be8ff"; ctx.shadowBlur = 20; ctx.strokeStyle = local ? "#fff4a3" : "#4be8ff"; ctx.lineWidth = 3; ctx.strokeRect(-25, -39, 50, 78); }
+    if (local || followed) {
+      ctx.strokeStyle = local ? "rgba(255,244,163,.58)" : "rgba(75,232,255,.5)"; ctx.lineWidth = 2; const x=24,y=38,l=9;
+      ctx.beginPath();ctx.moveTo(-x+l,-y);ctx.lineTo(-x,-y);ctx.lineTo(-x,-y+l);ctx.moveTo(x-l,-y);ctx.lineTo(x,-y);ctx.lineTo(x,-y+l);ctx.moveTo(-x+l,y);ctx.lineTo(-x,y);ctx.lineTo(-x,y-l);ctx.moveTo(x-l,y);ctx.lineTo(x,y);ctx.lineTo(x,y-l);ctx.stroke();
+    }
     if (image) {
       const drawX = -image.width * 0.35, drawY = -image.height * 0.35, drawWidth = image.width * 0.7, drawHeight = image.height * 0.7;
       ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);

@@ -62,7 +62,7 @@ export class DerbyModel {
     Object.values(this.cars).forEach(car => {
       if (!car.destroyed || car.visible === false) return;
       car.wreckTimer = Math.max(0, (car.wreckTimer ?? 5) - dt);
-      if (car.wreckTimer <= 0) car.visible = false;
+      if (car.wreckTimer <= 0) { car.visible = false; this.events.push({ type: "remove", id: car.id }); }
     });
   }
   updateCollisionCooldowns(dt) {
