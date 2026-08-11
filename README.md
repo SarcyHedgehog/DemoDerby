@@ -38,7 +38,7 @@ npm run serve
 
 Open `http://localhost:8770/` in two browsers or devices and use the same arena code.
 
-The join screen also includes a five-bot practice arena. It requires no Photon connection and is useful for learning the damage system or checking a build.
+The join screen also includes a three-bot practice arena. It requires no Photon connection and is useful for learning the damage system or checking a build.
 
 ## Tests
 

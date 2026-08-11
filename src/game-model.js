@@ -27,6 +27,7 @@ export class DerbyModel {
   }
   tick(dt = FIXED_STEP) {
     dt = clamp(Number(dt) || FIXED_STEP, 0, 0.05); this.tickNumber += 1; this.phaseTime = Math.max(0, this.phaseTime - dt);
+    this.updateWrecks(dt);
     if (this.phase === "lobby") this.updateLobby();
     else if (this.phase === "countdown") {
       if (this.activeConnected().length < MIN_PLAYERS) this.toLobby();
@@ -57,7 +58,15 @@ export class DerbyModel {
       this.phase = "results"; this.phaseTime = RESULTS_SECONDS; this.events.push({ type: "winner", id: this.winnerId });
     }
   }
+  updateWrecks(dt) {
+    Object.values(this.cars).forEach(car => {
+      if (!car.destroyed || car.visible === false) return;
+      car.wreckTimer = Math.max(0, (car.wreckTimer ?? 5) - dt);
+      if (car.wreckTimer <= 0) car.visible = false;
+    });
+  }
   integrateCar(car, dt) {
+    car.wallCooldown = Math.max(0, (car.wallCooldown || 0) - dt);
     const input = car.input; const speedRatio = clamp(Math.abs(car.speed) / Math.max(1, car.maxSpeed), 0, 1);
     if (input.forward) car.speed += CAR.acceleration * dt;
     if (input.brake) car.speed -= (car.speed > 0 ? CAR.brake : CAR.acceleration * 0.65) * dt;
@@ -69,13 +78,19 @@ export class DerbyModel {
     this.constrainToTrack(car);
   }
   constrainToTrack(car) {
-    const cx = WORLD.width / 2, cy = WORLD.height / 2; const outerX = cx - WORLD.padding, outerY = cy - WORLD.padding;
-    const innerX = WORLD.width / 2 - WORLD.infield, innerY = WORLD.height / 2 - WORLD.infield * 0.66; const dx = car.x - cx, dy = car.y - cy;
+    const cx = WORLD.width / 2, cy = WORLD.height / 2; const outerX = cx - WORLD.padding - CAR.radius * 0.7, outerY = cy - WORLD.padding - CAR.radius * 0.7;
+    const innerX = WORLD.width / 2 - WORLD.infield + CAR.radius * 0.7, innerY = WORLD.height / 2 - WORLD.infield * 0.66 + CAR.radius * 0.7; const dx = car.x - cx, dy = car.y - cy;
     const outer = Math.sqrt((dx * dx) / (outerX * outerX) + (dy * dy) / (outerY * outerY));
     const inner = Math.sqrt((dx * dx) / (innerX * innerX) + (dy * dy) / (innerY * innerY)); let hit = false;
-    if (outer > 1) { car.x = cx + dx / outer * outerX; car.y = cy + dy / outer * outerY; hit = true; }
+    if (outer > 1) { car.x = cx + dx / outer; car.y = cy + dy / outer; hit = true; }
     else if (inner < 1) { const scale = 1 / Math.max(inner, 0.001); car.x = cx + dx * scale; car.y = cy + dy * scale; hit = true; }
-    if (hit) { const impact = Math.abs(car.speed); car.speed *= -0.28; if (impact > CAR.maxSpeed * 0.58) this.applyDamage(car, Math.min(1.5, impact / CAR.maxSpeed), null, "wall"); this.events.push({ type: "wall", id: car.id, x: car.x, y: car.y, power: impact / CAR.maxSpeed }); }
+    if (hit) {
+      const impact = Math.abs(car.speed); car.speed *= -0.28;
+      if (car.wallCooldown <= 0) {
+        const damage = impact > CAR.maxSpeed * 0.35 ? this.applyDamage(car, Math.min(0.65, impact / CAR.maxSpeed * 0.65), null, "wall") : 0;
+        this.events.push({ type: "wall", id: car.id, x: car.x, y: car.y, power: impact / CAR.maxSpeed, damage }); car.wallCooldown = 0.45;
+      }
+    }
   }
   collide(a, b) {
     const dx = b.x - a.x, dy = b.y - a.y, distance = Math.hypot(dx, dy) || 0.001; if (distance >= CAR.radius * 2) return false;
@@ -83,14 +98,15 @@ export class DerbyModel {
     const relative = Math.abs((a.speed * Math.cos(a.angle) - b.speed * Math.cos(b.angle)) * nx + (a.speed * Math.sin(a.angle) - b.speed * Math.sin(b.angle)) * ny);
     const overlap = CAR.radius * 2 - distance; if (!a.destroyed) { a.x -= nx * overlap * 0.52; a.y -= ny * overlap * 0.52; } if (!b.destroyed) { b.x += nx * overlap * 0.52; b.y += ny * overlap * 0.52; }
     const angleAB = Math.atan2(dy, dx); const hitA = hitZone(wrapAngle(angleAB - a.angle)); const hitB = hitZone(wrapAngle(angleAB + Math.PI - b.angle));
-    const scale = clamp(relative / (CAR.maxSpeed * 0.65), 0.12, 1.2); this.applyDamage(a, zoneDamage(hitB) * scale, b, "car"); this.applyDamage(b, zoneDamage(hitA) * scale, a, "car");
+    const scale = clamp(relative / (CAR.maxSpeed * 0.65), 0.12, 1.2); const damageToA = this.applyDamage(a, zoneDamage(hitB) * scale, b, "car"); const damageToB = this.applyDamage(b, zoneDamage(hitA) * scale, a, "car");
     const oldA = a.speed, oldB = b.speed; if (!a.destroyed) a.speed = oldA * 0.35 + oldB * 0.22; if (!b.destroyed) b.speed = oldB * 0.35 + oldA * 0.22;
-    a.stats.hits += 1; b.stats.hits += 1; this.events.push({ type: "collision", a: a.id, b: b.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, power: scale }); return true;
+    a.stats.hits += 1; b.stats.hits += 1; this.events.push({ type: "collision", a: a.id, b: b.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, power: scale, damageToA, damageToB }); return true;
   }
   applyDamage(car, amount, attacker = null, source = "car") {
-    if (car.destroyed || amount <= 0) return; const before = car.damage; car.damage = clamp(car.damage + amount, 0, CAR.maxDamage);
+    if (car.destroyed || amount <= 0) return 0; const before = car.damage; car.damage = clamp(car.damage + amount, 0, CAR.maxDamage);
     car.maxSpeed = car.damage >= 15 ? CAR.maxSpeed * 0.52 : CAR.maxSpeed * (1 - car.damage * 0.012); if (attacker) attacker.stats.damageDealt += car.damage - before;
-    if (car.damage >= CAR.maxDamage) { car.destroyed = true; car.speed = 0; car.input = emptyInput(); car.stats.wrecks += 1; if (attacker) attacker.stats.knockouts += 1; this.events.push({ type: "wreck", id: car.id, attacker: attacker?.id || null, source }); }
+    if (car.damage >= CAR.maxDamage) { car.destroyed = true; car.visible = true; car.wreckTimer = 5; car.speed = 0; car.input = emptyInput(); car.stats.wrecks += 1; if (attacker) attacker.stats.knockouts += 1; this.events.push({ type: "wreck", id: car.id, attacker: attacker?.id || null, source }); }
+    return car.damage - before;
   }
   resetCar(car, index, racing, total = 1) {
     if (racing) {
@@ -101,10 +117,10 @@ export class DerbyModel {
       car.y = WORLD.height / 2 + Math.sin(theta) * laneY;
       car.angle = theta + Math.PI / 2;
     } else { car.x = WORLD.width / 2; car.y = WORLD.height / 2; car.angle = 0; }
-    car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.racing = racing; car.input = emptyInput();
+    car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.visible = true; car.wreckTimer = 0; car.wallCooldown = 0; car.racing = racing; car.input = emptyInput();
   }
   makeCar(id, name, slot) {
-    return { id, name: safeName(name), color: COLORS[slot % COLORS.length], visualIndex: slot % 8, connected: true, racing: false, x: 160, y: WORLD.height / 2, angle: 0, speed: 0, damage: 0, maxSpeed: CAR.maxSpeed, destroyed: false, input: emptyInput(), stats: { wins: 0, hits: 0, wrecks: 0, knockouts: 0, damageDealt: 0, distance: 0 } };
+    return { id, name: safeName(name), color: COLORS[slot % COLORS.length], visualIndex: slot % 8, connected: true, racing: false, x: 160, y: WORLD.height / 2, angle: 0, speed: 0, damage: 0, maxSpeed: CAR.maxSpeed, destroyed: false, visible: true, wreckTimer: 0, wallCooldown: 0, input: emptyInput(), stats: { wins: 0, hits: 0, wrecks: 0, knockouts: 0, damageDealt: 0, distance: 0 } };
   }
   connectedCars() { return this.order.map(id => this.cars[id]).filter(car => car?.connected); }
   racingCars() { return this.order.map(id => this.cars[id]).filter(car => car?.racing); }

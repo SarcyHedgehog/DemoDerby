@@ -20,7 +20,7 @@
       <div class="arena-wrap">
         <canvas id="arena" aria-label="DemoDerby arena"></canvas>
         <div id="phase-card" class="phase-card"><small>ARENA STATUS</small><strong id="phase-title">Waiting in the pits</strong><span id="phase-detail">Two drivers are required</span></div>
-        <div class="hud damage-hud"><span>DAMAGE</span><meter id="damage" min="0" max="20" value="0"></meter><strong id="damage-label">0 / 20</strong></div>
+        <div class="hud damage-hud"><span>DAMAGE</span><meter id="damage" min="0" max="20" value="0"></meter><strong id="damage-label">0 / 20</strong><div id="damage-debug" class="damage-debug"><div>CAUSED <i class="impact-dot empty"></i><b id="caused-value">—</b></div><div>RECEIVED <i class="impact-dot empty"></i><b id="received-value">—</b></div></div></div>
         <div class="hud speed-hud"><span>SPEED</span><strong id="speed">000</strong><small>MPH-ish</small></div>
         <div id="touch-controls" class="touch-controls" aria-label="Driving controls">
           <div class="steer"><button data-control="left" aria-label="Steer left">◀</button><button data-control="right" aria-label="Steer right">▶</button></div>
@@ -45,7 +45,7 @@
       <label>Driver name<input id="driver-name" maxlength="18" autocomplete="nickname" required value="Roadkill"></label>
       <label>Arena code<input id="room-code" maxlength="12" inputmode="text" required value="SMASH"></label>
       <button class="enter" type="submit">ENTER THE ARENA</button>
-      <button class="practice" id="practice" type="button">PRACTICE WITH FIVE BOTS</button>
+      <button class="practice" id="practice" type="button">PRACTICE WITH THREE BOTS</button>
       <p id="join-error" class="error" role="alert"></p>
       <div class="rules"><span><b>FRONT HIT</b> heavy damage</span><span><b>SIDE HIT</b> medium damage</span><span><b>REAR HIT</b> light damage</span></div>
     </form>

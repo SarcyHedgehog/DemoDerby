@@ -15,3 +15,9 @@ dialog {
   font-weight: 850;
   cursor: pointer;
 }
+.damage-hud { width: 255px; }
+.damage-debug { clear: both; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 7px; margin-top: 5px; border-top: 1px solid #49443c; }
+.damage-debug div { display: grid; grid-template-columns: auto 10px 1fr; align-items: center; gap: 5px; color: #8f9495; font-size: 8px; letter-spacing: .7px; }
+.damage-debug b { color: white; font-size: 11px; }
+.impact-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 7px currentColor; }
+.impact-dot.empty { background: #555; box-shadow: none; }

@@ -22,9 +22,9 @@ export class ArenaView {
     if (snapshot.phase === "results" && this.lastPhase !== "results") this.audio.fanfare(); this.lastPhase = snapshot.phase;
   }
   consumeEvent(event) {
-    if (event.type === "collision") { this.spark(event.x, event.y, event.power); this.audio.hit(event.power); this.shake = Math.max(this.shake, 3 + event.power * 10); }
+    if (event.type === "collision") { this.spark(event.x, event.y, event.power); this.audio.hit(event.power); if ([event.a,event.b].includes(this.localActor) || [event.a,event.b].includes(this.followActor)) this.shake = Math.max(this.shake, 1 + event.power * 4); }
     if (event.type === "wall") { this.spark(event.x, event.y, event.power * 0.5); this.audio.wall(event.power); }
-    if (event.type === "wreck") { const car = this.current?.cars?.[event.id]; if (car) this.smokeBurst(car.x, car.y); this.audio.wreck(); this.shake = 15; }
+    if (event.type === "wreck") { const car = this.current?.cars?.[event.id]; if (car) this.smokeBurst(car.x, car.y); this.audio.wreck(); if (event.id === this.localActor || event.id === this.followActor) this.shake = 6; }
   }
   spark(x, y, power = 0.5) { for (let i = 0; i < 8 + power * 18; i += 1) this.effects.push({ kind: "spark", x, y, vx: (Math.random() - 0.5) * 310 * power, vy: (Math.random() - 0.5) * 310 * power, age: 0, life: 0.25 + Math.random() * 0.45 }); }
   smokeBurst(x, y) { for (let i = 0; i < 24; i += 1) this.effects.push({ kind: "smoke", x, y, vx: (Math.random() - 0.5) * 70, vy: -25 - Math.random() * 60, age: 0, life: 1.5 + Math.random() }); }
@@ -35,7 +35,7 @@ export class ArenaView {
     const scale = Math.min(width / WORLD.width, height / WORLD.height), ox = (width - WORLD.width * scale) / 2, oy = (height - WORLD.height * scale) / 2;
     const shakeX = this.shake ? (Math.random() - 0.5) * this.shake : 0, shakeY = this.shake ? (Math.random() - 0.5) * this.shake : 0; this.shake *= 0.88;
     ctx.save(); ctx.translate(ox + shakeX, oy + shakeY); ctx.scale(scale, scale); this.drawArena(ctx, time);
-    if (this.current) { const alpha = Math.min(1, (performance.now() - this.receivedAt) / 80); for (const id of this.current.order || []) { const current = this.current.cars[id]; if (!current?.racing) continue; const previous = this.previous?.cars?.[id] || current; this.drawCar(ctx, interpolateCar(previous, current, alpha), id, time); } }
+    if (this.current) { const alpha = Math.min(1, (performance.now() - this.receivedAt) / 80); for (const id of this.current.order || []) { const current = this.current.cars[id]; if (!current?.racing || current.visible === false) continue; const previous = this.previous?.cars?.[id] || current; this.drawCar(ctx, interpolateCar(previous, current, alpha), id, time); } }
     this.drawEffects(ctx, 1 / 60); ctx.restore();
   }
   drawArena(ctx, time) {
@@ -59,6 +59,7 @@ export class ArenaView {
   }
   drawFloodlights(ctx, time) { ctx.save(); ctx.globalCompositeOperation = "screen"; const pulse = 0.11 + Math.sin(time / 600) * 0.015; for (const [x, y] of [[80,80],[1120,80],[80,640],[1120,640]]) { const glow = ctx.createRadialGradient(x,y,0,x,y,170); glow.addColorStop(0, `rgba(255,239,180,${pulse * 2.3})`); glow.addColorStop(1,"rgba(255,239,180,0)"); ctx.fillStyle=glow;ctx.fillRect(x-170,y-170,340,340); } ctx.restore(); }
   drawCar(ctx, car, id, time) {
+    ctx.save(); ctx.globalAlpha = car.destroyed ? Math.max(0, Math.min(1, (car.wreckTimer ?? 5) / 5)) : 1;
     const image = this.images[car.visualIndex % 8], local = id === this.localActor, followed = id === this.followActor;
     if (Math.abs(car.speed) > 80 && !car.destroyed && Math.random() < 0.18) this.trails.push({ x: car.x - Math.cos(car.angle) * 30, y: car.y - Math.sin(car.angle) * 30, age: 0, life: 1.6 });
     ctx.save(); ctx.translate(car.x + 5, car.y + 7); ctx.rotate(car.angle + Math.PI / 2); ctx.scale(1, 0.7); ctx.fillStyle = "rgba(0,0,0,.42)"; ctx.beginPath(); ctx.ellipse(0, 0, 29, 42, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -75,7 +76,7 @@ export class ArenaView {
     if (car.destroyed) { ctx.fillStyle = "rgba(30,20,16,.65)"; roundRect(ctx, -22, -36, 44, 72, 8); ctx.fill(); }
     ctx.restore();
     if (car.damage >= 15) { const amount = car.destroyed ? 4 : 1; for (let i = 0; i < amount; i += 1) { ctx.fillStyle = `rgba(115,115,115,${0.12 + Math.random() * 0.15})`; ctx.beginPath(); ctx.arc(car.x + (Math.random() - .5) * 14, car.y - 28 - Math.random() * 28, 7 + Math.random() * 11, 0, Math.PI * 2); ctx.fill(); } }
-    ctx.font = "700 16px system-ui"; ctx.textAlign = "center"; ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillText(car.name, car.x + 1, car.y - 49 + 1); ctx.fillStyle = "white"; ctx.fillText(car.name, car.x, car.y - 49);
+    ctx.font = "700 16px system-ui"; ctx.textAlign = "center"; ctx.fillStyle = "rgba(0,0,0,.8)"; ctx.fillText(car.name, car.x + 1, car.y - 49 + 1); ctx.fillStyle = "white"; ctx.fillText(car.name, car.x, car.y - 49); ctx.restore();
   }
   drawEffects(ctx, dt) {
     for (const trail of this.trails) { trail.age += dt; ctx.fillStyle = `rgba(15,15,15,${0.28 * (1 - trail.age / trail.life)})`; ctx.beginPath(); ctx.arc(trail.x, trail.y, 5, 0, Math.PI * 2); ctx.fill(); } this.trails = this.trails.filter(item => item.age < item.life);

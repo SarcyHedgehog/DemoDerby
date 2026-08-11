@@ -5,7 +5,7 @@ export class PracticeRoom extends EventTarget {
   constructor(name) { super(); this.name = name || "Roadkill"; this.roomCode = "PRACTICE"; this.model = new DerbyModel(424242); this.connected = false; }
   async connect() {
     this.connected = true; this.model.addPlayer(1, this.name);
-    ["Crusher", "Mayhem", "Banger", "Wrecker", "Dentist"].forEach((name, index) => this.model.addPlayer(index + 2, name));
+    ["Crusher", "Mayhem", "Banger"].forEach((name, index) => this.model.addPlayer(index + 2, name));
     this.dispatchEvent(new CustomEvent("status", { detail: "Connected" })); this.emitPresence(); this.start();
   }
   start() {
@@ -24,7 +24,7 @@ export class PracticeRoom extends EventTarget {
   broadcast() { const snapshot = this.model.snapshot(); this.latest = snapshot; this.dispatchEvent(new CustomEvent("snapshot", { detail: snapshot })); }
   emitPresence() { this.dispatchEvent(new CustomEvent("presence", { detail: Object.values(this.model.cars).map(car => ({ actor: Number(car.id), name: car.name })) })); }
   setInput(input) { this.model.setInput(1, input); }
-  reset() { const name = this.name; this.stop(); this.model = new DerbyModel(424242); this.model.addPlayer(1,name); ["Crusher","Mayhem","Banger","Wrecker","Dentist"].forEach((bot,index)=>this.model.addPlayer(index+2,bot)); this.start(); }
+  reset() { const name = this.name; this.stop(); this.model = new DerbyModel(424242); this.model.addPlayer(1,name); ["Crusher","Mayhem","Banger"].forEach((bot,index)=>this.model.addPlayer(index+2,bot)); this.start(); }
   myActor() { return 1; }
   isMaster() { return true; }
   stop() { clearInterval(this.loop); clearInterval(this.snapshots); }
