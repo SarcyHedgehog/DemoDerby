@@ -5,7 +5,7 @@ import { PhotonRoom } from "./photon-room.js";
 import { PracticeRoom } from "./practice-room.js";
 
 const $ = selector => document.querySelector(selector);
-const ui = { dialog: $("#join-dialog"), form: $("#join-form"), name: $("#driver-name"), code: $("#room-code"), error: $("#join-error"), connection: $("#connection"), invite: $("#invite"), install: $("#install"), room: $("#room-label"), standings: $("#standings"), events: $("#events"), phaseTitle: $("#phase-title"), phaseDetail: $("#phase-detail"), phaseCard: $("#phase-card"), damage: $("#damage"), damageLabel: $("#damage-label"), caused: $("#caused-value"), received: $("#received-value"), speed: $("#speed"), reset: $("#reset"), spectator: $("#spectator-tools"), follow: $("#follow"), toast: $("#toast") };
+const ui = { dialog: $("#join-dialog"), form: $("#join-form"), name: $("#driver-name"), code: $("#room-code"), error: $("#join-error"), connection: $("#connection"), invite: $("#invite"), install: $("#install"), room: $("#room-label"), standings: $("#standings"), events: $("#events"), phaseTitle: $("#phase-title"), phaseDetail: $("#phase-detail"), phaseCard: $("#phase-card"), damage: $("#damage"), damageLabel: $("#damage-label"), damageLedger: $("#damage-ledger"), speed: $("#speed"), reset: $("#reset"), spectator: $("#spectator-tools"), follow: $("#follow"), toast: $("#toast") };
 const audio = new AudioEngine(), view = new ArenaView($("#arena"), audio), input = { forward: false, brake: false, left: false, right: false };
 let room = null, latest = null, presence = [], previousEventTick = -1, deferredInstall = null;
 
@@ -31,7 +31,7 @@ function wireRoom(next) {
 }
 function render(snapshot) {
   const myCar = snapshot.cars[String(room.myActor())]; const active = myCar?.racing && !myCar.destroyed && snapshot.phase === "playing";
-  audio.setEngine(myCar?.speed || 0, myCar?.damage || 0, active); ui.damage.value = myCar?.damage || 0; ui.damageLabel.textContent = `${Math.round(myCar?.damage || 0)} / ${CAR.maxDamage}`; ui.speed.textContent = String(Math.round(Math.abs(myCar?.speed || 0) * 0.32)).padStart(3, "0");
+  audio.setEngine(myCar?.speed || 0, myCar?.damage || 0, active); ui.damage.value = myCar?.damage || 0; ui.damageLabel.textContent = `${Math.round(myCar?.damage || 0)} / ${CAR.maxDamage}`; ui.speed.textContent = String(Math.round(Math.abs(myCar?.speed || 0) * 0.32)).padStart(3, "0"); renderDamageLedger(myCar, snapshot);
   document.body.classList.toggle("wrecked", !!myCar?.destroyed); document.body.classList.toggle("spectating", !myCar?.racing); ui.spectator.hidden = !!myCar?.racing;
   setPhase(snapshot); renderStandings(snapshot); renderEvents(snapshot); updateFollow(snapshot); ui.reset.hidden = !room.isMaster();
 }
@@ -54,18 +54,17 @@ function renderEvents(snapshot) {
     let text = ""; if (event.type === "join") text = `${event.name} rolled into the pits`; if (event.type === "leave") text = `${event.name} left the arena`;
     if (event.type === "collision") text = `${nameOf(event.a)} hit ${nameOf(event.b)}`; if (event.type === "wreck") text = `${nameOf(event.id)} was wrecked${event.attacker ? ` by ${nameOf(event.attacker)}` : ""}`; if (event.type === "winner") text = event.id ? `${nameOf(event.id)} is the last car moving` : "Nobody survived";
     if (text) { const li = document.createElement("li"); li.textContent = text; ui.events.prepend(li); while (ui.events.children.length > 7) ui.events.lastElementChild.remove(); }
-    updateDamageDebug(event);
     if (event.type === "collision" && (event.a === String(room.myActor()) || event.b === String(room.myActor())) && event.power > .35) navigator.vibrate?.(Math.round(25 + event.power * 70));
     if (event.type === "wreck" && event.id === String(room.myActor())) navigator.vibrate?.([120, 60, 220]);
   }
 }
-function updateDamageDebug(event) {
-  const me = String(room.myActor());
-  if (event.type === "collision" && event.a === me) { setImpact(ui.caused, latest.cars[event.b]?.color, event.damageToB); setImpact(ui.received, latest.cars[event.b]?.color, event.damageToA); }
-  else if (event.type === "collision" && event.b === me) { setImpact(ui.caused, latest.cars[event.a]?.color, event.damageToA); setImpact(ui.received, latest.cars[event.a]?.color, event.damageToB); }
-  else if (event.type === "wall" && event.id === me) setImpact(ui.received, "#b9b1a0", event.damage);
+function renderDamageLedger(car, snapshot) {
+  if (!car) { ui.damageLedger.innerHTML = '<div class="empty-ledger">No car assigned</div>'; return; }
+  const ids = [...new Set([...Object.keys(car.damageCaused || {}), ...Object.keys(car.damageReceived || {})])].filter(id => (car.damageCaused?.[id] || 0) > 0 || (car.damageReceived?.[id] || 0) > 0);
+  if (!ids.length) { ui.damageLedger.innerHTML = '<div class="empty-ledger">No contact yet</div>'; return; }
+  ui.damageLedger.innerHTML = ids.map(id => { const opponent = snapshot.cars[id]; return `<div class="ledger-row" title="${escapeHtml(opponent?.name || "Opponent")}"><i style="--impact:${opponent?.color || "#aaa"}"></i><b>${formatDamage(car.damageCaused?.[id])}</b><b>${formatDamage(car.damageReceived?.[id])}</b></div>`; }).join("");
 }
-function setImpact(target, color, amount) { if (!target || !amount) return; target.textContent = Number(amount).toFixed(1); const dot = target.parentElement.querySelector(".impact-dot"); dot.style.background = color || "#aaa"; dot.classList.remove("empty"); }
+function formatDamage(value = 0) { return value < 10 ? value.toFixed(1) : Math.round(value).toString(); }
 function updateFollow(snapshot) {
   if (!ui.spectator.hidden) { const value = ui.follow.value; const racers = snapshot.order.map(id => snapshot.cars[id]).filter(car => car?.racing); ui.follow.innerHTML = racers.map(car => `<option value="${car.id}">${escapeHtml(car.name)}${car.destroyed ? " — wrecked" : ""}</option>`).join(""); if (racers.some(car => car.id === value)) ui.follow.value = value; view.setFollowActor(ui.follow.value || racers[0]?.id); }
 }

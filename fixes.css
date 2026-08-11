@@ -16,8 +16,10 @@ dialog {
   cursor: pointer;
 }
 .damage-hud { width: 255px; }
-.damage-debug { clear: both; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 7px; margin-top: 5px; border-top: 1px solid #49443c; }
-.damage-debug div { display: grid; grid-template-columns: auto 10px 1fr; align-items: center; gap: 5px; color: #8f9495; font-size: 8px; letter-spacing: .7px; }
-.damage-debug b { color: white; font-size: 11px; }
-.impact-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 7px currentColor; }
-.impact-dot.empty { background: #555; box-shadow: none; }
+.damage-ledger-head, .ledger-row { clear: both; display: grid; grid-template-columns: 18px 1fr 1fr; align-items: center; gap: 8px; }
+.damage-ledger-head { padding-top: 7px; margin-top: 5px; border-top: 1px solid #49443c; color: #8f9495; font-size: 8px; letter-spacing: .7px; text-align: right; }
+.damage-ledger { display: grid; gap: 2px; padding-top: 3px; }
+.ledger-row { min-height: 16px; text-align: right; font-variant-numeric: tabular-nums; }
+.ledger-row i { width: 10px; height: 10px; border-radius: 50%; background: var(--impact); box-shadow: 0 0 7px var(--impact); }
+.ledger-row b { color: white; font-size: 11px; }
+.empty-ledger { color: #676d70; font-size: 9px; padding: 3px 0; }

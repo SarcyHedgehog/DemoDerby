@@ -99,6 +99,8 @@ export class DerbyModel {
     const overlap = CAR.radius * 2 - distance; if (!a.destroyed) { a.x -= nx * overlap * 0.52; a.y -= ny * overlap * 0.52; } if (!b.destroyed) { b.x += nx * overlap * 0.52; b.y += ny * overlap * 0.52; }
     const angleAB = Math.atan2(dy, dx); const hitA = hitZone(wrapAngle(angleAB - a.angle)); const hitB = hitZone(wrapAngle(angleAB + Math.PI - b.angle));
     const scale = clamp(relative / (CAR.maxSpeed * 0.65), 0.12, 1.2); const damageToA = this.applyDamage(a, zoneDamage(hitB) * scale, b, "car"); const damageToB = this.applyDamage(b, zoneDamage(hitA) * scale, a, "car");
+    a.damageCaused[b.id] = (a.damageCaused[b.id] || 0) + damageToB; a.damageReceived[b.id] = (a.damageReceived[b.id] || 0) + damageToA;
+    b.damageCaused[a.id] = (b.damageCaused[a.id] || 0) + damageToA; b.damageReceived[a.id] = (b.damageReceived[a.id] || 0) + damageToB;
     const oldA = a.speed, oldB = b.speed; if (!a.destroyed) a.speed = oldA * 0.35 + oldB * 0.22; if (!b.destroyed) b.speed = oldB * 0.35 + oldA * 0.22;
     a.stats.hits += 1; b.stats.hits += 1; this.events.push({ type: "collision", a: a.id, b: b.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, power: scale, damageToA, damageToB }); return true;
   }
@@ -117,10 +119,10 @@ export class DerbyModel {
       car.y = WORLD.height / 2 + Math.sin(theta) * laneY;
       car.angle = theta + Math.PI / 2;
     } else { car.x = WORLD.width / 2; car.y = WORLD.height / 2; car.angle = 0; }
-    car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.visible = true; car.wreckTimer = 0; car.wallCooldown = 0; car.racing = racing; car.input = emptyInput();
+    car.speed = 0; car.damage = 0; car.maxSpeed = CAR.maxSpeed; car.destroyed = false; car.visible = true; car.wreckTimer = 0; car.wallCooldown = 0; car.damageCaused = {}; car.damageReceived = {}; car.racing = racing; car.input = emptyInput();
   }
   makeCar(id, name, slot) {
-    return { id, name: safeName(name), color: COLORS[slot % COLORS.length], visualIndex: slot % 8, connected: true, racing: false, x: 160, y: WORLD.height / 2, angle: 0, speed: 0, damage: 0, maxSpeed: CAR.maxSpeed, destroyed: false, visible: true, wreckTimer: 0, wallCooldown: 0, input: emptyInput(), stats: { wins: 0, hits: 0, wrecks: 0, knockouts: 0, damageDealt: 0, distance: 0 } };
+    return { id, name: safeName(name), color: COLORS[slot % COLORS.length], visualIndex: slot % 8, connected: true, racing: false, x: 160, y: WORLD.height / 2, angle: 0, speed: 0, damage: 0, maxSpeed: CAR.maxSpeed, destroyed: false, visible: true, wreckTimer: 0, wallCooldown: 0, damageCaused: {}, damageReceived: {}, input: emptyInput(), stats: { wins: 0, hits: 0, wrecks: 0, knockouts: 0, damageDealt: 0, distance: 0 } };
   }
   connectedCars() { return this.order.map(id => this.cars[id]).filter(car => car?.connected); }
   racingCars() { return this.order.map(id => this.cars[id]).filter(car => car?.racing); }
